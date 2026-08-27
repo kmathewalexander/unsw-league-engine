@@ -1,0 +1,29 @@
+# secrets & tokens
+.env
+private/
+*.json.token
+
+# personal, per-user config (keep the .example files)
+config/my_roster.csv
+config/player_overrides.csv
+
+# data & generated output
+data/
+reports/
+*.parquet
+*.duckdb
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/

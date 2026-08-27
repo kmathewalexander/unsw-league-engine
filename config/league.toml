@@ -1,0 +1,37 @@
+# UNSW League configuration.
+# Fill in `current_league_id` from your Yahoo league URL:
+#   https://football.fantasysports.yahoo.com/f1/<current_league_id>
+# `team_name` must match your team name in Yahoo exactly (used to find your team_id).
+# Everything else is auto-discovered on first `playbook sync` and written back here.
+
+[league]
+game_code = "nfl"
+current_season = 2026
+current_league_id = ""          # REQUIRED before first sync
+team_name = ""                  # REQUIRED before first sync
+timezone = "Australia/Sydney"
+
+# Auto-discovered map of season -> yahoo league_id for every prior season the API exposes.
+# Leave empty; `playbook sync` populates it.
+[league.history]
+# 2025 = "123456"
+
+[faab]
+season_budget = 100
+# min_bid = 0
+
+[sources]
+use_fantasypros = true
+use_nflverse = true
+
+[projections]
+# blend weights, must sum to ~1.0; tuned later against realized results
+w_fantasypros = 0.5
+w_usage_model = 0.3
+w_prior_year = 0.2
+floor_percentile = 20
+ceiling_percentile = 80
+
+[standings]
+monte_carlo_iterations = 10000
+playoff_teams = 6

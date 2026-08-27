@@ -1,0 +1,4 @@
+# Manual Yahoo-id -> nflverse gsis-id fixes for players the automatic crosswalk misses.
+# Find the Yahoo id in data/raw/yahoo/<season>/draft_results.json; the gsis id in
+# data/raw/nflverse/players.parquet.
+yahoo_id,gsis_id
