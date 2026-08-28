@@ -21,12 +21,8 @@ from yfpy.query import YahooFantasySportsQuery
 from .. import store
 from ..config import Settings, load_settings, load_yahoo_secrets, write_history
 
-# Yahoo NFL game ids by season. Yahoo issues a new game id each year; this map lets us
-# resolve historical league keys. Extend as new seasons appear.
-NFL_GAME_IDS: dict[int, int] = {
-    2015: 348, 2016: 359, 2017: 371, 2018: 380, 2019: 390, 2020: 399,
-    2021: 406, 2022: 414, 2023: 423, 2024: 449, 2025: 461, 2026: 999,
-}
+# Yahoo issues a new NFL "game id" each season. We resolve the season -> game_id map
+# dynamically from the API (get_all_yahoo_fantasy_game_keys) rather than hardcoding it.
 
 
 def _serialize(obj: Any) -> Any:
@@ -54,6 +50,7 @@ class YahooClient:
         # Load any previously persisted token vars.
         load_dotenv(self.settings.private_dir / ".env")
         self._current: YahooFantasySportsQuery | None = None
+        self._game_ids: dict[int, int] | None = None
 
     # ---- connection -------------------------------------------------------
 
@@ -80,10 +77,23 @@ class YahooClient:
                     "config/league.toml: [league].current_league_id is empty. "
                     "Set it to the number in your Yahoo league URL."
                 )
-            self._current = self._make_query(
-                lg.current_league_id, NFL_GAME_IDS.get(lg.current_season)
-            )
+            # game_id=None -> yfpy resolves the current NFL game automatically.
+            self._current = self._make_query(lg.current_league_id, None)
         return self._current
+
+    def game_id_for(self, season: int) -> int | None:
+        """Season -> Yahoo NFL game id, resolved once from the API and cached."""
+        if self._game_ids is None:
+            self._game_ids = {}
+            try:
+                for g in self.current().get_all_yahoo_fantasy_game_keys() or []:
+                    try:
+                        self._game_ids[int(g.season)] = int(g.game_id)
+                    except (TypeError, ValueError):
+                        continue
+            except Exception as exc:  # noqa: BLE001
+                print(f"  [yahoo] could not resolve game ids: {exc}")
+        return self._game_ids.get(season)
 
     # ---- discovery ------------------------------------------------------
 
@@ -96,10 +106,12 @@ class YahooClient:
         """
         q = self.current()
         target_name = self._league_name(q)
-        found: dict[int, str] = {self.settings.league.current_season: self.settings.league.current_league_id}
+        cur = self.settings.league.current_season
+        found: dict[int, str] = {cur: self.settings.league.current_league_id}
 
-        for season, game_id in sorted(NFL_GAME_IDS.items()):
-            if season >= self.settings.league.current_season:
+        for season in range(cur - 1, cur - 16, -1):
+            game_id = self.game_id_for(season)
+            if game_id is None:
                 continue
             try:
                 leagues = q.get_user_leagues_by_game_key(game_id)
@@ -121,7 +133,7 @@ class YahooClient:
     # ---- per-season snapshot ------------------------------------------
 
     def snapshot_season(self, season: int, league_id: str) -> None:
-        q = self._make_query(league_id, NFL_GAME_IDS.get(season))
+        q = self._make_query(league_id, self.game_id_for(season))
         layer, key = "raw/yahoo", str(season)
 
         def grab(name: str, fn):
