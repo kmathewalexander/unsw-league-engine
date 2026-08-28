@@ -5,6 +5,7 @@ the recommended live-draft workflow (more reliable than typing picks one by one)
 
 ```bash
 uv run playbook draft-board --board board.txt --teams 13
+uv run playbook draft-board --board board.txt --brief   # compact one-line-per-candidate output
 ```
 
 ## During the draft
@@ -50,6 +51,12 @@ Your Team
   this superflex league, 10 = thin at RB/WR, negative = stop drafting K/DEF).
 - **`adp`** is standard 1-QB consensus; in this superflex league real QB demand is
   much higher, so treat a QB's ADP as a floor on when he'll actually go.
+
+## `--brief`
+
+Skips the rich table and prints a compact block: your pick number, roster counts,
+picks-until-next, then the top 8 candidates as `name | pos | VOR | ADP | tier | notes`
+on one line each. Same ranking, far less to scan — use this for fast live picks.
 
 ## Override
 

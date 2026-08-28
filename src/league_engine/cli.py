@@ -214,6 +214,9 @@ def draft_board(
     until: int = typer.Option(
         None, help="Picks until your next turn. Auto-computed from the snake if omitted."
     ),
+    brief: bool = typer.Option(
+        False, "--brief", help="Compact plain-text output: one line per candidate, no rich table."
+    ),
 ):
     """Parse a pasted Yahoo draft board and recommend your next pick."""
     from pathlib import Path
@@ -266,6 +269,23 @@ def draft_board(
     rec = rec.with_columns(
         pl.struct(rec.columns).map_elements(research.notes_for, return_dtype=pl.Utf8).alias("notes")
     )
+
+    if brief:
+        have = {}
+        for p in mine:
+            row = vb.filter(pl.col("name") == p)
+            if row.height:
+                have[row["position"][0]] = have.get(row["position"][0], 0) + 1
+        roster = " ".join(f"{k}{v}" for k, v in sorted(have.items())) or "empty"
+        console.print(f"#{last_pick + 1} you pick | roster: {roster} | {until} until next turn")
+        for r in rec.head(8).iter_rows(named=True):
+            console.print(
+                f"  {r['name']:<22} {r['position']:<3} "
+                f"VOR {r['vor']:>5.0f}  ADP {r['adp'] or 0:>3.0f}  T{r['tier']}  "
+                f"{(r['notes'] or '').replace(chr(10), ' ')}"
+            )
+        return
+
     report.print_df(
         rec.select("name", "position", "vor", "adp", "tier", "pick_score", "notes"),
         f"Recommended pick (picks until your turn: {until})",
