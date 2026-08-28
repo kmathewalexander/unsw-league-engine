@@ -15,28 +15,38 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync                      # creates .venv with Python 3.12 and all deps
 ```
 
-### 2. Yahoo developer app
+### 2. League scoring (required)
 
-1. Go to https://developer.yahoo.com/apps/create/
-2. Application Type: **Installed Application**
-3. API Permissions: **Fantasy Sports → Read**
-4. Redirect URI: `https://localhost:8080`
-5. Copy `.env.example` to `.env` and paste in the Client ID / Client Secret.
+Yahoo retired self-service Fantasy Sports API access — it's now an application/approval process
+([sports.yahoo.com/developer/access](https://sports.yahoo.com/developer/access/)). Until that's
+approved, enter your league's scoring by hand:
 
-### 3. League config
+```bash
+cp config/scoring.toml.example config/scoring.toml
+```
 
-Edit `config/league.toml` — set the current-season Yahoo `league_id` (the number in your league
-URL: `https://football.fantasysports.yahoo.com/f1/<league_id>`) and your team name.
+Edit `config/scoring.toml` to match your Yahoo **League → Settings** page (the scoring table and
+the roster-positions table). It's a 10-minute one-time job and fully documented in the file.
+
+Also set your league identity in `config/league.toml`: `current_league_id` (from your league URL
+`.../f1/<id>`) and `team_name` (exact).
+
+### 3. Yahoo API (optional, for full automation later)
+
+Apply at [sports.yahoo.com/developer/access](https://sports.yahoo.com/developer/access/) citing
+"personal / single league use". If approved, add the Client ID/Secret to `.env` (copy
+`.env.example`) and the engine auto-pulls scoring, draft history, rosters and matchups — no more
+manual config. `config/scoring.toml` always overrides the API pull if present.
 
 ### 4. First sync
 
 ```bash
-uv run playbook sync
+uv run playbook sync            # add --skip-yahoo until API access is approved
 ```
 
-The first run opens a browser for a one-time Yahoo OAuth consent; paste the verification code back
-into the terminal. The token is cached in `private/` and reused afterwards. `sync` then auto-discovers
-every prior season of the league the API exposes and snapshots all data to `data/`.
+`sync` pulls nflverse + FantasyPros data, applies your scoring to every player-week, and builds the
+derived tables under `data/`. With Yahoo access it also does a one-time browser OAuth consent and
+snapshots your league history.
 
 ## Playbooks
 

@@ -178,21 +178,13 @@ def value_board(teams: int = 12) -> pl.DataFrame:
     )
     board = board.with_columns((pl.col("adp") - pl.col("overall_rank")).alias("value_vs_adp"))
 
-    # positional tiers: new tier when the drop from the prior player exceeds
-    # ~0.6 std of that position's season points
+    # positional tiers: evenly-sized bands of projected points below the position's
+    # #1, so `tier` answers "is there a real drop-off before my next pick".
     board = board.sort(["position", "season_points"], descending=[False, True])
-    board = board.with_columns(
-        (
-            (pl.col("season_points").shift(1).over("position") - pl.col("season_points"))
-            > (0.6 * pl.col("season_points").std().over("position"))
-        )
-        .fill_null(True)
-        .cast(pl.Int32)
-        .cum_sum()
-        .over("position")
-        .add(1)
-        .alias("tier")
-    )
+    top = pl.col("season_points").max().over("position")
+    band = pl.max_horizontal(0.055 * top, pl.lit(12.0))
+    deficit = (top - pl.col("season_points")).clip(lower_bound=0)
+    board = board.with_columns(((deficit / band).floor() + 1).cast(pl.Int32).alias("tier"))
     board = board.sort("vor", descending=True, nulls_last=True)
     store.write(board, "derived", "value_board")
     return board

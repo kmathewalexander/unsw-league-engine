@@ -251,11 +251,119 @@ def parse_settings(settings_json: dict, season: int) -> ScoringRules:
     return ScoringRules(season=season, rules=rules, roster=roster, unmapped=unmapped)
 
 
+# --- manual scoring config (config/scoring.toml) -------------------------------
+# Clean, documented keys the user enters by hand from the Yahoo league settings page
+# when the Yahoo API is unavailable. Maps to the same expressions as the Yahoo path.
+MANUAL_KEYS: dict[str, pl.Expr] = {
+    # passing
+    "passing_yards": _C("passing_yards"),
+    "passing_td": _C("passing_tds"),
+    "passing_interception": _C("passing_interceptions"),
+    "passing_attempt": _C("attempts"),
+    "passing_completion": _C("completions"),
+    "passing_incompletion": _C("attempts") - _C("completions"),
+    "passing_first_down": _C("passing_first_downs"),
+    "passing_2pt": _C("passing_2pt_conversions"),
+    "passing_sack": _C("sacks_suffered"),
+    # rushing
+    "rushing_attempt": _C("carries"),
+    "rushing_yards": _C("rushing_yards"),
+    "rushing_td": _C("rushing_tds"),
+    "rushing_first_down": _C("rushing_first_downs"),
+    "rushing_2pt": _C("rushing_2pt_conversions"),
+    # receiving
+    "reception": _C("receptions"),
+    "receiving_yards": _C("receiving_yards"),
+    "receiving_td": _C("receiving_tds"),
+    "receiving_first_down": _C("receiving_first_downs"),
+    "receiving_2pt": _C("receiving_2pt_conversions"),
+    "target": _C("targets"),
+    # misc offense
+    "return_td": _C("special_teams_tds"),
+    "return_yards": _C("punt_return_yards") + _C("kickoff_return_yards"),
+    "two_point_conversion": (
+        _C("passing_2pt_conversions") + _C("rushing_2pt_conversions") + _C("receiving_2pt_conversions")
+    ),
+    "fumble_lost": _C("fumbles_lost_total"),
+    "fumble_recovery_td": _C("fumble_recovery_tds"),
+    # kicker
+    "fg_made": _C("fg_made"),
+    "fg_missed": _C("fg_missed"),
+    "fg_made_0_19": _C("fg_made_0_19"),
+    "fg_made_20_29": _C("fg_made_20_29"),
+    "fg_made_30_39": _C("fg_made_30_39"),
+    "fg_made_40_49": _C("fg_made_40_49"),
+    "fg_made_50_plus": _C("fg_made_50_59") + _C("fg_made_60_"),
+    "pat_made": _C("pat_made"),
+    "pat_missed": _C("pat_missed"),
+    # IDP
+    "idp_tackle_solo": _C("def_tackles_solo"),
+    "idp_tackle_assist": _C("def_tackle_assists"),
+    "idp_sack": _C("def_sacks"),
+    "idp_interception": _C("def_interceptions"),
+    "idp_forced_fumble": _C("def_fumbles_forced"),
+    "idp_fumble_recovery": _C("def_fumbles"),
+    "idp_td": _C("def_tds"),
+    "idp_pass_defended": _C("def_pass_defended"),
+    "idp_safety": _C("def_safeties"),
+}
+
+
+def parse_manual(data: dict, season: int) -> ScoringRules:
+    """Parse ``config/scoring.toml`` -> ScoringRules.
+
+    Expected shape::
+
+        [[stat]]
+        key = "passing_yards"
+        points = 0.04
+
+        [roster]
+        QB = 1
+        RB = 2
+        "W/R/T" = 1
+        BN = 6
+    """
+    rules: list[ScoringRule] = []
+    unmapped: list[str] = []
+    for i, item in enumerate(data.get("stat", [])):
+        key = str(item.get("key", "")).strip()
+        try:
+            pts = float(item.get("points"))
+        except (TypeError, ValueError):
+            continue
+        expr = MANUAL_KEYS.get(key)
+        if expr is None:
+            unmapped.append(key)
+        rules.append(ScoringRule(stat_id=-(i + 1), name=key, norm=key, multiplier=pts, expr=expr))
+
+    roster = [RosterSlot(str(pos), int(cnt)) for pos, cnt in (data.get("roster", {}) or {}).items()]
+    return ScoringRules(season=season, rules=rules, roster=roster, unmapped=unmapped)
+
+
+def manual_config_path():
+    from .config import load_settings
+
+    return load_settings().root / "config" / "scoring.toml"
+
+
 def load_rules(season: int) -> ScoringRules:
-    data = store.read_json("raw/yahoo", str(season), "league_settings")
-    if isinstance(data, dict) and "settings" in data:
-        data = data["settings"]
-    return parse_settings(data, season)
+    """Prefer the hand-entered config/scoring.toml; fall back to the Yahoo snapshot."""
+    manual = manual_config_path()
+    if manual.exists():
+        import tomllib
+
+        with manual.open("rb") as fh:
+            return parse_manual(tomllib.load(fh), season)
+    if store.json_exists("raw/yahoo", str(season), "league_settings"):
+        data = store.read_json("raw/yahoo", str(season), "league_settings")
+        if isinstance(data, dict) and "settings" in data:
+            data = data["settings"]
+        return parse_settings(data, season)
+    raise FileNotFoundError(
+        "No scoring rules found. Either run `playbook sync` with Yahoo API access, "
+        "or fill in config/scoring.toml (copy config/scoring.toml.example)."
+    )
 
 
 def score_weekly(player_stats: pl.DataFrame, rules: ScoringRules) -> pl.DataFrame:

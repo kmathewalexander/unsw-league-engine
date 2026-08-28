@@ -27,3 +27,6 @@ dist/
 .DS_Store
 .idea/
 .vscode/
+
+# personal scoring config
+config/scoring.toml

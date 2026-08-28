@@ -25,10 +25,19 @@ def sync(
     """Refresh all data sources into data/."""
     settings = load_settings()
 
+    manual_scoring = scoring.manual_config_path().exists()
     if not skip_yahoo:
         console.rule("Yahoo")
-        history = yahoo_ingest.sync(full=full)
-        console.print(f"Seasons discovered: {sorted(history)}")
+        try:
+            history = yahoo_ingest.sync(full=full)
+            console.print(f"Seasons discovered: {sorted(history)}")
+        except Exception as exc:  # noqa: BLE001
+            console.print(f"[yellow]Yahoo pull skipped: {exc}[/yellow]")
+            if not manual_scoring:
+                console.print(
+                    "[yellow]No Yahoo data and no config/scoring.toml — the engine needs one "
+                    "of them. See docs/playbooks/sync.md.[/yellow]"
+                )
 
     if settings.sources.use_nflverse:
         console.rule("nflverse")
@@ -55,8 +64,10 @@ def scoring_check():
     console.print(rules.describe())
     if rules.unmapped:
         console.print(
-            "[yellow]Add expressions for the unmapped stats in "
-            "src/league_engine/scoring.py:STAT_EXPR[/yellow]"
+            "[yellow]Unmapped stats (scoring 0): "
+            + ", ".join(rules.unmapped)
+            + "\nUse a supported key (see config/scoring.toml.example) or add an "
+            "expression in src/league_engine/scoring.py:MANUAL_KEYS.[/yellow]"
         )
 
 

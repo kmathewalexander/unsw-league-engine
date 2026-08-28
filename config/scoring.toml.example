@@ -1,0 +1,115 @@
+# ── UNSW League scoring — fill this in from Yahoo ─────────────────────────────
+#
+# Copy this file to  config/scoring.toml  and edit it to match your league.
+#
+# In Yahoo: League → Settings. You need two things from that page:
+#   1. the "Fantasy Points" / scoring table  → the [[stat]] blocks below
+#   2. the "Roster Positions" table          → the [roster] block at the bottom
+#
+# Each [[stat]] is one line of your league's scoring:
+#   key    = a supported stat key (full list at the bottom of this file)
+#   points = points awarded per one of that stat (can be negative or fractional)
+#
+# Delete the [[stat]] blocks your league doesn't use. If your league scores
+# something not in the supported list, tell Claude and it'll be added.
+#
+# The values below are a common half-PPR setup — REPLACE with your real numbers.
+
+# ---- Passing ----
+[[stat]]
+key = "passing_yards"
+points = 0.04            # e.g. 1 pt / 25 yds = 0.04
+[[stat]]
+key = "passing_td"
+points = 4
+[[stat]]
+key = "passing_interception"
+points = -2
+
+# ---- Rushing ----
+[[stat]]
+key = "rushing_yards"
+points = 0.1             # 1 pt / 10 yds
+[[stat]]
+key = "rushing_td"
+points = 6
+
+# ---- Receiving ----
+[[stat]]
+key = "reception"
+points = 0.5             # 0 = standard, 0.5 = half-PPR, 1 = full PPR
+[[stat]]
+key = "receiving_yards"
+points = 0.1
+[[stat]]
+key = "receiving_td"
+points = 6
+
+# ---- Misc ----
+[[stat]]
+key = "two_point_conversion"
+points = 2
+[[stat]]
+key = "fumble_lost"
+points = -2
+[[stat]]
+key = "return_td"
+points = 6
+
+# ---- Kicker (uncomment / edit if your league starts a K) ----
+# [[stat]]
+# key = "fg_made_0_19"
+# points = 3
+# [[stat]]
+# key = "fg_made_20_29"
+# points = 3
+# [[stat]]
+# key = "fg_made_30_39"
+# points = 3
+# [[stat]]
+# key = "fg_made_40_49"
+# points = 4
+# [[stat]]
+# key = "fg_made_50_plus"
+# points = 5
+# [[stat]]
+# key = "fg_missed"
+# points = -1
+# [[stat]]
+# key = "pat_made"
+# points = 1
+# [[stat]]
+# key = "pat_missed"
+# points = -1
+
+
+# ── Roster positions ─────────────────────────────────────────────────────────
+# position = count, for EVERY row in Yahoo's "Roster Positions" table, using
+# Yahoo's exact labels. Flex is usually "W/R/T" (RB/WR/TE) or "Q/W/R/T" (superflex).
+# Bench = "BN", injured reserve = "IR". Include them all.
+[roster]
+QB = 1
+RB = 2
+WR = 2
+TE = 1
+"W/R/T" = 1
+K = 1
+DEF = 1
+BN = 6
+IR = 1
+
+
+# ── Supported stat keys ──────────────────────────────────────────────────────
+# passing_yards  passing_td  passing_interception  passing_attempt
+# passing_completion  passing_incompletion  passing_first_down  passing_2pt  passing_sack
+# rushing_attempt  rushing_yards  rushing_td  rushing_first_down  rushing_2pt
+# reception  receiving_yards  receiving_td  receiving_first_down  receiving_2pt  target
+# two_point_conversion  fumble_lost  fumble_recovery_td  return_td  return_yards
+# fg_made  fg_missed  fg_made_0_19  fg_made_20_29  fg_made_30_39  fg_made_40_49
+# fg_made_50_plus  pat_made  pat_missed
+# idp_tackle_solo  idp_tackle_assist  idp_sack  idp_interception  idp_forced_fumble
+# idp_fumble_recovery  idp_td  idp_pass_defended  idp_safety
+#
+# NOTE: team DEF/DST scoring (points allowed, yards allowed, sacks-as-team) is not
+# yet supported in manual mode — DEF picks will show 0 until it's added or Yahoo
+# API access is approved.
