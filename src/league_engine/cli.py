@@ -89,7 +89,7 @@ def draft_prep(teams: int = typer.Option(12)):
         (
             "Best values vs ADP",
             report.df_to_md(
-                board.filter(pl.col("adp").is_not_null())
+                board.filter(pl.col("adp").is_not_null() & ~pl.col("position").is_in(["K", "DEF"]))
                 .sort("value_vs_adp", descending=True, nulls_last=True)
                 .head(30)
             ),

@@ -134,21 +134,34 @@ class BoardConfig:
     weeks: int = 17
 
 
+FLEX_SLOTS = {"W/R/T", "W/R", "R/W/T", "FLEX", "W/T", "R/T"}
+SUPERFLEX_SLOTS = {"Q/W/R/T", "Q/W/R", "SUPERFLEX", "SFLEX", "OP"}
+
+
 def replacement_levels(rules: scoring.ScoringRules, teams: int) -> dict[str, int]:
-    """Rank at each position where a replacement-level starter sits, from roster slots."""
-    demand = {"QB": 0, "RB": 0, "WR": 0, "TE": 0, "K": 0, "DEF": 0}
-    flex = 0
+    """Rank at each position where a replacement-level starter sits, from roster slots.
+
+    Flex demand is split by how those slots are filled in practice: a plain flex
+    skews RB/WR, a superflex (Q/W/R/T) is mostly a second QB.
+    """
+    demand = {"QB": 0.0, "RB": 0.0, "WR": 0.0, "TE": 0.0, "K": 0.0, "DEF": 0.0}
+    flex = superflex = 0
     for slot in rules.starting_slots:
         p = slot.position.upper()
         if p in demand:
             demand[p] += slot.count
-        elif p in {"W/R/T", "W/R", "FLEX", "R/W/T"} or p == "Q/W/R/T":
+        elif p in SUPERFLEX_SLOTS:
+            superflex += slot.count
+        elif p in FLEX_SLOTS:
             flex += slot.count
-    # distribute flex 20/55/25 RB/WR/TE as a league-average assumption
-    demand["RB"] += round(flex * 0.55)
-    demand["WR"] += round(flex * 0.25)
-    demand["TE"] += round(flex * 0.20)
-    return {pos: max(1, n) * teams for pos, n in demand.items()}
+
+    for pos, share in {"RB": 0.50, "WR": 0.38, "TE": 0.12}.items():
+        demand[pos] += flex * share
+    # A superflex slot runs a 2nd QB ~60% of weeks (byes/injuries force a flex the rest).
+    for pos, share in {"QB": 0.60, "RB": 0.18, "WR": 0.16, "TE": 0.06}.items():
+        demand[pos] += superflex * share
+
+    return {pos: max(1, round(n)) * teams for pos, n in demand.items()}
 
 
 def value_board(teams: int = 12) -> pl.DataFrame:
@@ -230,10 +243,19 @@ def recommend_pick(
         pl.col("name").map_elements(_n, return_dtype=pl.Utf8).is_in([_n(x) for x in my_roster_names])
     )
     have = dict(have_df.group_by("position").len().iter_rows())
+
+    # superflex leagues want a 2nd QB; detect from the roster config
+    try:
+        rules = scoring.load_rules(load_settings().league.current_season)
+        superflex = any(s.position.upper() in SUPERFLEX_SLOTS for s in rules.starting_slots)
+    except Exception:  # noqa: BLE001
+        superflex = False
+    qb_target = 2 if superflex else 1
+
     need_bonus = {
         "RB": 10.0 if have.get("RB", 0) < 2 else (4.0 if have.get("RB", 0) < 4 else 0.0),
         "WR": 10.0 if have.get("WR", 0) < 2 else (4.0 if have.get("WR", 0) < 4 else 0.0),
-        "QB": 6.0 if have.get("QB", 0) < 1 else 0.0,
+        "QB": (12.0 if superflex else 6.0) if have.get("QB", 0) < qb_target else 0.0,
         "TE": 5.0 if have.get("TE", 0) < 1 else 0.0,
         "K": -20.0 if len(my_roster_names) < 13 else 0.0,
         "DEF": -15.0 if len(my_roster_names) < 12 else 0.0,

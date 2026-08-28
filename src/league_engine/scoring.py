@@ -284,6 +284,7 @@ MANUAL_KEYS: dict[str, pl.Expr] = {
     "two_point_conversion": (
         _C("passing_2pt_conversions") + _C("rushing_2pt_conversions") + _C("receiving_2pt_conversions")
     ),
+    "fumble": _C("fumbles_total"),
     "fumble_lost": _C("fumbles_lost_total"),
     "fumble_recovery_td": _C("fumble_recovery_tds"),
     # kicker
