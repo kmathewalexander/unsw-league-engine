@@ -59,8 +59,41 @@ def _ecr_board() -> pl.DataFrame:
         .sort("ecr")
         .unique(subset=["name", "position"], keep="first")
     )
-    # position rank
-    return out.with_columns(pl.col("ecr").rank("ordinal").over("position").alias("pos_rank"))
+    out = out.with_columns(pl.col("ecr").rank("ordinal").over("position").alias("ecr_pos_rank"))
+    return _blend_expert_ranks(out)
+
+
+def _blend_expert_ranks(board: pl.DataFrame) -> pl.DataFrame:
+    """Blend the ECR positional rank with Josh Norris & Hayden Winks (config/expert_ranks.csv).
+
+    Their lists are half-PPR/1-QB, so we blend *within position* only — the superflex
+    structure comes later from VOR/replacement levels. Players absent from the expert
+    lists keep their ECR rank.
+    """
+    path = load_settings().root / "config" / "expert_ranks.csv"
+    if not path.exists():
+        return board.rename({"ecr_pos_rank": "pos_rank"})
+    exp = pl.read_csv(path).with_columns(
+        pl.col("name").str.to_lowercase().str.replace_all(r"[^a-z]", "").alias("_k")
+    )
+    b = board.with_columns(pl.col("name").str.to_lowercase().str.replace_all(r"[^a-z]", "").alias("_k"))
+    b = b.join(exp.select("_k", "norris", "winks"), on="_k", how="left").drop("_k")
+    b = b.with_columns(
+        pl.col("norris").cast(pl.Float64, strict=False).rank("ordinal").over("position").alias("nr"),
+        pl.col("winks").cast(pl.Float64, strict=False).rank("ordinal").over("position").alias("wr"),
+    )
+    # weighted mean of available ranks: ECR 0.5, Norris 0.25, Winks 0.25 (renormalised)
+    num = 0.5 * pl.col("ecr_pos_rank")
+    den = pl.lit(0.5)
+    num = num + pl.when(pl.col("nr").is_not_null()).then(0.25 * pl.col("nr")).otherwise(0.0)
+    den = den + pl.when(pl.col("nr").is_not_null()).then(0.25).otherwise(0.0)
+    num = num + pl.when(pl.col("wr").is_not_null()).then(0.25 * pl.col("wr")).otherwise(0.0)
+    den = den + pl.when(pl.col("wr").is_not_null()).then(0.25).otherwise(0.0)
+    b = b.with_columns((num / den).alias("_blend"))
+    b = b.with_columns(
+        pl.col("_blend").rank("ordinal").over("position").alias("pos_rank")
+    ).drop("_blend", "nr", "wr")
+    return b
 
 
 def _rank_to_ppg_curve(lp: pl.DataFrame) -> dict[str, pl.DataFrame]:
