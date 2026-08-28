@@ -127,6 +127,72 @@ def draft_live(teams: int = typer.Option(12), picks_until_next: int = typer.Opti
         console.print(f"  drafted={len(drafted)} mine={len(mine)}")
 
 
+@app.command("draft-board")
+def draft_board(
+    board: str = typer.Option(..., help="Path to a text file with the pasted Yahoo draft-results panel."),
+    teams: int = typer.Option(13),
+    until: int = typer.Option(
+        None, help="Picks until your next turn. Auto-computed from the snake if omitted."
+    ),
+):
+    """Parse a pasted Yahoo draft board and recommend your next pick."""
+    from pathlib import Path
+
+    from .analysis import draft
+    from .analysis import draft_board as db
+
+    if not store.exists("derived", "value_board"):
+        projections.season_projection()
+        draft.value_board(teams)
+    vb = store.read("derived", "value_board")
+
+    text = Path(board).read_text()
+    picks = db.parse_board(text)
+    resolved = db.resolve(picks, vb)
+
+    unmatched = resolved.filter(~pl.col("matched"))
+    if unmatched.height:
+        console.print("[yellow]Could not match these picks (ignored):[/yellow]")
+        report.print_df(unmatched.select("pick", "display", "position", "team"), "unmatched")
+
+    drafted = resolved.filter(pl.col("matched"))["matched_name"].to_list()
+    mine = resolved.filter(pl.col("matched") & pl.col("is_mine"))["matched_name"].to_list()
+    last_pick = max((p.pick for p in picks), default=0)
+
+    if until is None:
+        # snake: seat from my earliest pick; urgency uses the gap AFTER my imminent pick
+        my_picks = sorted(resolved.filter(pl.col("is_mine"))["pick"].to_list())
+        if my_picks:
+            seat = my_picks[0]
+            on_clock = _next_snake_pick(seat, teams, last_pick)      # my imminent pick
+            after = _next_snake_pick(seat, teams, on_clock)          # the one after that
+            until = max(0, after - on_clock - 1)
+            console.print(
+                f"Seat {seat}/{teams}. You're on the clock at #{on_clock}; "
+                f"next turn #{after} ({until} picks away)."
+            )
+        else:
+            until = teams
+    console.print(f"[dim]{len(drafted)} players off the board, you have {len(mine)}: "
+                  f"{', '.join(mine) or '(none)'}[/dim]")
+
+    rec = draft.recommend_pick(drafted, mine, until, teams)
+    report.print_df(rec, f"Recommended pick (picks until your turn: {until})")
+
+
+def _next_snake_pick(seat: int, teams: int, last_pick: int) -> int:
+    """Next overall pick number for a given 1-indexed snake seat after last_pick."""
+    p = 0
+    rnd = 0
+    while p <= last_pick + teams * 2:
+        rnd += 1
+        pick = (rnd - 1) * teams + (seat if rnd % 2 == 1 else teams - seat + 1)
+        if pick > last_pick:
+            return pick
+        p = pick
+    return last_pick + 1
+
+
 @app.command()
 def lineup(week: int = typer.Option(..., help="NFL week number")):
     """Optimal lineup + start/sit calls for your team."""

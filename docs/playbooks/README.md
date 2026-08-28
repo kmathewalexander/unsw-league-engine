@@ -7,7 +7,8 @@ decision procedure. Run `playbook sync` first each day you use the engine.
 |---|---|---|
 | `sync` | [sync.md](sync.md) | Start of every session |
 | `draft-prep` | [draft-prep.md](draft-prep.md) | Days before the draft |
-| `draft-live` | [draft-live.md](draft-live.md) | During the draft |
+| `draft-board` | [draft-board.md](draft-board.md) | During the draft — paste Yahoo's pick list |
+| `draft-live` | [draft-live.md](draft-live.md) | During the draft — type picks manually (fallback) |
 | `lineup` | [lineup.md](lineup.md) | Wed–Sun each game week |
 | `waivers` | [waivers.md](waivers.md) | Tue (after MNF), before waivers process |
 | `trades` | [trades.md](trades.md) | Weekly, or when you have a clear surplus/need |
