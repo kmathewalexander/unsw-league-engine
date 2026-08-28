@@ -32,6 +32,7 @@ class LeagueConfig(BaseModel):
     current_season: int
     current_league_id: str
     team_name: str
+    teams: int = 12
     timezone: str = "Australia/Sydney"
     history: dict[int, str] = Field(default_factory=dict)
 

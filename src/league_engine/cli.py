@@ -5,7 +5,7 @@ from __future__ import annotations
 import typer
 from rich.console import Console
 
-from . import crosswalk, projections, report, scoring, store
+from . import crosswalk, projections, report, research, scoring, store
 from .config import load_settings
 from .ingest import fantasypros as fp_ingest
 from .ingest import nfl as nfl_ingest
@@ -53,6 +53,15 @@ def sync(
     rules = scoring.load_rules(settings.league.current_season)
     console.print(rules.describe())
     scoring.build_points_table(settings.league.current_season)
+    projections.season_projection()
+    from .analysis import draft as _draft
+
+    _draft.value_board(settings.league.teams)
+    try:
+        research.build()
+        console.print("[green]research table built[/green]")
+    except Exception as exc:  # noqa: BLE001
+        console.print(f"[yellow]research build skipped: {exc}[/yellow]")
     console.print("[green]sync complete[/green]")
 
 
@@ -72,18 +81,46 @@ def scoring_check():
 
 
 @app.command("draft-prep")
-def draft_prep(teams: int = typer.Option(12)):
+def draft_prep(teams: int = typer.Option(None)):
     """Pre-draft report: league tendencies, manager profiles, value board, targets."""
     from .analysis import draft
 
+    teams = teams or load_settings().league.teams
     projections.season_projection()
-    board = draft.value_board(teams)
+    draft.value_board(teams)
+    research.build()
+    board = research.enriched().sort("vor", descending=True, nulls_last=True)
     profiles = draft.manager_profiles()
     runs = draft.positional_runs()
 
-    report.print_df(board.head(30), "Value board (top 30 by VOR)")
+    view = [
+        c for c in ("name", "position", "team", "tier", "vor", "adp", "value_vs_adp",
+                    "usage_grade", "xfp_pg", "fp_oe_pg", "team_total", "win_total",
+                    "sos_playoffs", "age", "rookie", "flag")
+        if c in board.columns
+    ]
+    report.print_df(board.select(view).head(30), "Value board (top 30 by VOR)")
+
+    # unsustainable profile: modest expected volume, big actual production, no injury excuse
+    fades = board.filter(
+        (pl.col("fp_oe_pg") > 3.0) & (pl.col("xfp_pg") < 14) & pl.col("flag").is_null()
+        & pl.col("adp").is_not_null() & (pl.col("adp") <= 100)
+    ).select("name", "position", "adp", "fp_oe_pg", "xfp_pg", "team_total")
+    # RB/WR/TE going behind the board with strong real usage (QB value is covered elsewhere)
+    sleepers = board.filter(
+        pl.col("position").is_in(["RB", "WR", "TE"])
+        & pl.col("usage_grade").is_in(["A", "B"])
+        & (pl.col("adp") > pl.col("overall_rank") + 12)
+    ).select("name", "position", "adp", "overall_rank", "usage_grade", "team_total", "xfp_pg").head(20)
+    flagged = board.filter(pl.col("flag").is_not_null() & (pl.col("overall_rank") <= 230)).select(
+        "name", "position", "overall_rank", "flag"
+    )
+
     sections = [
-        ("Value board", report.df_to_md(board, 200)),
+        ("Value board", report.df_to_md(board.select(view), 220)),
+        ("Regression risks (rode TD luck in 2025, still going early)", report.df_to_md(fades)),
+        ("Sleepers (strong usage, ADP behind the board)", report.df_to_md(sleepers)),
+        ("Status flags to verify", report.df_to_md(flagged)),
         ("Manager profiles", report.df_to_md(profiles)),
         ("Positional run rates", report.df_to_md(runs)),
         (
@@ -91,6 +128,7 @@ def draft_prep(teams: int = typer.Option(12)):
             report.df_to_md(
                 board.filter(pl.col("adp").is_not_null() & ~pl.col("position").is_in(["K", "DEF"]))
                 .sort("value_vs_adp", descending=True, nulls_last=True)
+                .select(view)
                 .head(30)
             ),
         ),
@@ -186,6 +224,8 @@ def draft_board(
     if not store.exists("derived", "value_board"):
         projections.season_projection()
         draft.value_board(teams)
+    if not store.exists("derived", "research"):
+        research.build()
     vb = store.read("derived", "value_board")
 
     text = Path(board).read_text()
@@ -219,7 +259,17 @@ def draft_board(
                   f"{', '.join(mine) or '(none)'}[/dim]")
 
     rec = draft.recommend_pick(drafted, mine, until, teams)
-    report.print_df(rec, f"Recommended pick (picks until your turn: {until})")
+    enr = research.enriched()
+    cols = [c for c in ("name", "position", "flag", "usage_grade", "fp_oe_pg", "team_total",
+                        "win_total", "sos_playoffs", "age", "rookie") if c in enr.columns]
+    rec = rec.join(enr.select(cols), on=["name", "position"], how="left")
+    rec = rec.with_columns(
+        pl.struct(rec.columns).map_elements(research.notes_for, return_dtype=pl.Utf8).alias("notes")
+    )
+    report.print_df(
+        rec.select("name", "position", "vor", "adp", "tier", "pick_score", "notes"),
+        f"Recommended pick (picks until your turn: {until})",
+    )
 
 
 def _next_snake_pick(seat: int, teams: int, last_pick: int) -> int:

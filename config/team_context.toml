@@ -1,0 +1,36 @@
+# Team-level context for the research layer. Update before the draft if lines move.
+# win_total = 2026 Vegas season win total (over/under). Source: Yahoo/BetMGM, Aug 2026.
+
+[win_total]
+BAL = 11.5
+LAR = 11.5
+BUF = 10.5
+DET = 10.5
+GB  = 10.5
+KC  = 10.5
+LAC = 10.5
+PHI = 10.5
+SF  = 10.5
+SEA = 10.5
+CHI = 9.5
+CIN = 9.5
+DAL = 9.5
+DEN = 9.5
+HOU = 9.5
+JAX = 9.5
+NE  = 9.5
+MIN = 8.5
+PIT = 8.5
+TB  = 8.5
+ATL = 7.5
+CAR = 7.5
+IND = 7.5
+NO  = 7.5
+NYG = 7.5
+WAS = 7.5
+CLE = 6.5
+TEN = 6.5
+LV  = 5.5
+NYJ = 5.5
+ARI = 4.5
+MIA = 4.5
