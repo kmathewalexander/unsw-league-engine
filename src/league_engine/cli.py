@@ -98,6 +98,48 @@ def draft_prep(teams: int = typer.Option(12)):
     report.save("draft-prep", sections)
 
 
+@app.command()
+def preranks(
+    teams: int = typer.Option(13),
+    out: str = typer.Option("reports/preranks.csv", help="Output CSV path."),
+    limit: int = typer.Option(250),
+):
+    """Export the value board as a Yahoo 'Edit Pre-Draft Ranks' import CSV.
+
+    Columns: rank,name,team,position (Yahoo matches on name). Upload it at
+    football.fantasysports.yahoo.com/f1/<league>/<team>/editprerank -> Import.
+    """
+    from pathlib import Path
+
+    from .analysis import draft
+
+    projections.season_projection()
+    board = draft.value_board(teams).sort("vor", descending=True, nulls_last=True)
+    main = board.filter(pl.col("position") != "DEF")
+    ordered = pl.concat([main, board.filter(pl.col("position") == "DEF")]).head(limit)
+
+    team_col = None
+    if store.exists("raw/nflverse", "ff_rankings"):
+        fr = (
+            store.read("raw/nflverse", "ff_rankings")
+            .filter(pl.col("page_type") == "redraft-overall")
+            .select("player", "team")
+            .unique(subset=["player"])
+        )
+        ordered = ordered.join(fr.rename({"player": "name"}), on="name", how="left")
+        team_col = "team"
+
+    lines = ["rank,name,team,position"]
+    for i, r in enumerate(ordered.iter_rows(named=True), 1):
+        tm = (r.get(team_col) or "") if team_col else ""
+        lines.append(f"{i},{r['name']},{tm},{r['position']}")
+    path = Path(load_settings().root / out)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines))
+    console.print(f"[green]wrote[/green] {path}  ({len(lines) - 1} players)")
+    report.print_df(ordered.select("name", "position", "vor", "tier").head(20), "Top 20")
+
+
 @app.command("draft-live")
 def draft_live(teams: int = typer.Option(12), picks_until_next: int = typer.Option(12)):
     """Interactive draft assistant. Enter picks as 'name' lines; blank line = recommend."""
