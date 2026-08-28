@@ -7,8 +7,8 @@
 [league]
 game_code = "nfl"
 current_season = 2026
-current_league_id = ""          # REQUIRED before first sync
-team_name = ""                  # REQUIRED before first sync
+current_league_id = "827662"    # 2026 UNSW League
+team_name = ""                  # set to your exact Yahoo team name (needed for lineup/waivers/standings)
 timezone = "Australia/Sydney"
 
 # Auto-discovered map of season -> yahoo league_id for every prior season the API exposes.
