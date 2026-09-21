@@ -57,6 +57,8 @@ snapshots your league history.
 | `uv run playbook draft-live` | Interactive draft assistant |
 | `uv run playbook lineup --week N` | Optimal lineup + start/sit calls |
 | `uv run playbook waivers --week N` | Ranked waiver targets, drops, FAAB bids |
+| `uv run playbook review --week N` | Power rankings, all-play luck, playoff odds, optimal lineup ([review.md](docs/playbooks/review.md)) |
+| `uv run playbook player NAME...` | Usage / luck / trend profile + marginal lineup gain |
 | `uv run playbook trades` | Ranked trade proposals with rest-of-season impact |
 | `uv run playbook standings` | Monte Carlo playoff odds + projected finish |
 | `uv run playbook brief --week N` | Combined weekly report |

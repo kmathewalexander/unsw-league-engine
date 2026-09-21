@@ -30,3 +30,9 @@ dist/
 
 # personal scoring config
 config/scoring.toml
+
+# per-week Yahoo snapshots (staging inputs for `playbook track`)
+config/league_rosters.csv
+config/standings.csv
+config/free_agents.csv
+config/schedule.csv

@@ -339,23 +339,55 @@ def lineup(week: int = typer.Option(..., help="NFL week number")):
 
 
 @app.command()
-def waivers(week: int = typer.Option(...)):
-    """Ranked waiver targets, drops and FAAB bids."""
-    from .analysis import waivers as wv
+def waivers(week: int = typer.Option(...), top: int = typer.Option(25)):
+    """Free agents ranked by marginal lineup gain, with usage / luck / trend evidence."""
+    from .analysis import review as rv
 
-    projections.weekly_projection(week)
-    roster = _load_my_roster()
-    proj = store.read("derived", f"proj_week_{week}")
-    mine = proj.join(roster, on="name", how="semi")
-    baseline = (
-        mine.group_by("position").agg(pl.col("mean").min().alias("worst")).to_dict(as_series=False)
-        if mine.height
-        else {"position": [], "worst": []}
-    )
-    base = dict(zip(baseline["position"], baseline["worst"], strict=False))
-    table = wv.candidates(week, base)
-    report.print_df(table, f"Waiver targets — week {week}")
+    pt = rv.player_table()
+    table = rv.waiver_table(load_settings().league.team_name, pt, top_n=top)
+    report.print_df(table, f"Waiver targets — week {week}", max_rows=top)
     report.save(f"waivers-week{week}", [("Targets", report.df_to_md(table, 100))])
+
+
+@app.command()
+def review(week: int = typer.Option(3, help="First week still to be simulated")):
+    """League power rankings, all-play luck check, slot strength and playoff odds."""
+    from .analysis import review as rv
+
+    pt = rv.player_table()
+    teams, lineups, unmatched = rv.team_table(pt)
+    power = rv.power_table(teams, rv.load_standings())
+    odds = rv.odds_table(power, first_week=week)
+    table = power.join(odds, on="team", how="left").sort("power_rank")
+    show = table.select(
+        "power_rank", "team", "wins", "losses", "proj_week", "vs_avg", "allplay_pct",
+        "playoff_odds", "avg_wins", "avg_seed",
+    ).with_columns(pl.col(pl.Float64).round(2))
+    report.print_df(show, "League review", max_rows=13)
+    me = load_settings().league.team_name
+    mine = pl.DataFrame(
+        [{"slot": s, "player": p.name, "forecast": round(p.proj, 1)} for s, p in lineups[me].items()]
+    )
+    report.print_df(mine, f"{me}: optimal lineup")
+    secs = [("League", report.df_to_md(show)), ("My lineup", report.df_to_md(mine))]
+    if unmatched.height:
+        report.print_df(unmatched, "Roster names not matched to nflverse")
+        secs.append(("Unmatched", report.df_to_md(unmatched)))
+    report.save("review", secs)
+
+
+@app.command()
+def player(names: list[str] = typer.Argument(...)):
+    """Evidence profile for one or more players (usage, luck, trend, forecast, marginal gain)."""
+    from .analysis import review as rv
+
+    pt = rv.player_table()
+    report.print_df(rv.profile(names, pt), "Player profile")
+    wt = rv.waiver_table(load_settings().league.team_name, pt, top_n=500)
+    keys = {rv._nk(n) for n in names}
+    hit = wt.filter(pl.col("name").map_elements(rv._nk, return_dtype=pl.Utf8).is_in(list(keys)))
+    if hit.height:
+        report.print_df(hit.select("name", "lineup_gain", "replaces"), "Marginal gain for my lineup if added")
 
 
 @app.command()
@@ -366,10 +398,9 @@ def trades():
 
 
 @app.command()
-def standings():
-    """Monte Carlo playoff odds + projected finish."""
-    console.print("[yellow]standings: requires current standings + remaining schedule snapshot.[/yellow]")
-    console.print("Populate from Yahoo matchups_by_week + league_standings, then analysis.standings.simulate().")
+def standings(week: int = typer.Option(3, help="First week still to be simulated")):
+    """Monte Carlo playoff odds (alias of the odds columns in `review`)."""
+    review(week=week)
 
 
 @app.command()
@@ -383,9 +414,16 @@ def brief(week: int = typer.Option(...)):
 def _load_my_roster():
     import polars as pl
 
+    settings = load_settings()
+    league_csv = settings.root / "config" / "league_rosters.csv"
+    if league_csv.exists():
+        from .analysis import review as _rv
+
+        pt = _rv.player_table()
+        ros = _rv._attach(_rv.load_rosters().filter(pl.col("team") == settings.league.team_name), pt)
+        return ros.filter(pl.col("position").is_not_null()).select("name", "position")
     if store.exists("derived", "my_roster"):
         return store.read("derived", "my_roster")
-    settings = load_settings()
     csv = settings.root / "config" / "my_roster.csv"
     if csv.exists():
         return pl.read_csv(csv)

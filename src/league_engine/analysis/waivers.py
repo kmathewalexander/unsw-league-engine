@@ -49,7 +49,9 @@ def candidates(week: int, my_starter_baseline: dict[str, float], own_threshold: 
     pool = proj
     if store.exists("raw/nflverse", "ff_rankings_week"):
         own = store.read("raw/nflverse", "ff_rankings_week")
-        ocol = next((c for c in ("owned", "pct_owned", "ownership") if c in own.columns), None)
+        ocol = next(
+            (c for c in ("owned", "pct_owned", "ownership", "player_owned_avg") if c in own.columns), None
+        )
         ncol = next((c for c in ("player", "player_name", "name") if c in own.columns), None)
         if ocol and ncol:
             pool = pool.join(

@@ -9,7 +9,7 @@ game_code = "nfl"
 current_season = 2026
 current_league_id = "827662"    # 2026 UNSW League
 team_name = "Nifty Knights Ni!"
-teams = 13
+teams = 12
 timezone = "Australia/Sydney"
 
 # Auto-discovered map of season -> yahoo league_id for every prior season the API exposes.
