@@ -138,6 +138,65 @@ def track_standings(week: int) -> pl.DataFrame | None:
     return df
 
 
+# ------------------------------------------------------------------ nflverse availability + advanced
+def track_advanced() -> pl.DataFrame:
+    """Per skill player per played week: status + advanced usage (ported from the dynasty repo).
+
+    status: bye | played (snaps>0) | injury (0 snaps + on report) | healthy_scratch | no_nflverse_data
+    metrics: targets, target_share, air_yards_share, wopr (nflverse player_stats), offense snaps
+    Stored at derived/league/player_weekly_advanced (owner = fantasy team or FA).
+    """
+    from .analysis import review as rv
+    from .research import _fix_team
+
+    pt = rv.player_table().filter(pl.col("position").is_in(["QB", "RB", "WR", "TE"]))
+    pt = pt.with_columns(pl.col("team").replace({"LA": "LAR"}))
+    ps = store.read("raw/nflverse", "player_stats").filter(pl.col("season_type") == "REG")
+    cur = int(ps["season"].max())
+    played_weeks = sorted(ps.filter(pl.col("season") == cur)["week"].unique().to_list())
+    sc = store.read("raw/nflverse", "schedules").filter((pl.col("season") == cur) & (pl.col("game_type") == "REG"))
+    plays = pl.concat([
+        sc.select(pl.col("home_team").alias("team"), "week"), sc.select(pl.col("away_team").alias("team"), "week")
+    ]).with_columns(_fix_team("team").alias("team")).with_columns(pl.lit(True).alias("_game"))
+
+    grid = pt.select("player_id", "name", "position", "team").join(pl.DataFrame({"week": played_weeks}), how="cross")
+    grid = grid.join(plays, on=["team", "week"], how="left")
+    stats = ps.filter(pl.col("season") == cur).select(
+        "player_id", "week", "targets", "target_share", "air_yards_share", "wopr")
+    grid = grid.join(stats, on=["player_id", "week"], how="left")
+    sn = store.read("raw/nflverse", "snap_counts").filter((pl.col("season") == cur) & (pl.col("game_type") == "REG"))
+    sn = sn.with_columns(pl.col("player").map_elements(rv._nk, return_dtype=pl.Utf8).alias("_k"),
+                         _fix_team("team").alias("team")).select("_k", "team", "week", "offense_snaps", "offense_pct")
+    sn = sn.unique(subset=["_k", "team", "week"])
+    grid = grid.with_columns(pl.col("name").map_elements(rv._nk, return_dtype=pl.Utf8).alias("_k")).join(
+        sn, on=["_k", "team", "week"], how="left")
+    inj = store.read("raw/nflverse", "injuries").filter(pl.col("season") == cur)
+    inj = inj.filter(pl.col("report_status").is_not_null()).group_by(["gsis_id", "week"]).agg(
+        pl.col("report_status").first().alias("inj_status")).with_columns(pl.col("week").cast(pl.Int64))
+    grid = grid.with_columns(pl.col("week").cast(pl.Int64)).join(
+        inj, left_on=["player_id", "week"], right_on=["gsis_id", "week"], how="left")
+    snaps = pl.col("offense_snaps").fill_null(0)
+    status = (
+        pl.when(pl.col("_game").is_null()).then(pl.lit("bye"))
+        .when(snaps > 0).then(pl.lit("played"))
+        .when(pl.col("inj_status").is_not_null()).then(pl.lit("injury"))
+        .when(pl.col("offense_snaps").is_null() & pl.col("targets").is_null()).then(pl.lit("no_nflverse_data"))
+        .otherwise(pl.lit("healthy_scratch"))
+    )
+    out = grid.with_columns(status.alias("status")).drop("_game", "_k")
+    ros = rv.load_rosters().filter(pl.col("slot") != "IR").select("_k", pl.col("team").alias("owner"))
+    out = out.with_columns(pl.col("name").map_elements(rv._nk, return_dtype=pl.Utf8).alias("_k")).join(
+        ros, on="_k", how="left").drop("_k").with_columns(pl.col("owner").fill_null("FA"))
+    store.write(out, DERIVED, "player_weekly_advanced")
+    return out
+
+
+def track_draft() -> int:
+    from .analysis import draft_review as dr
+
+    return dr.build_picks().height
+
+
 def track_all(week: int | None = None) -> dict[str, int]:
     week = week or current_week()
     out = {"week": week}
@@ -146,4 +205,9 @@ def track_all(week: int | None = None) -> dict[str, int]:
     out["waiver_pool"] = track_waivers(week).height
     s = track_standings(week)
     out["standings"] = 0 if s is None else s.height
+    out["advanced_rows"] = track_advanced().height
+    try:
+        out["draft_picks"] = track_draft()
+    except FileNotFoundError:
+        out["draft_picks"] = 0
     return out

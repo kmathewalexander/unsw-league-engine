@@ -1,0 +1,15 @@
+# Round-1 pick order per season (snake: even rounds reverse). Codes map to franchises below.
+[orders]
+2026 = ["Chingy's Chongs","Eagles","Royals","SDC Niners","Red Dragons","Pete'sburgh Steelers","Machete Squad","Nifty Knights Ni!","Make Draye whilst the sunshine","Romo-sexual","Team Autopick","Seanhawks"]
+2025 = ["Red Dragons","Chingy's Chongs","Romo-sexual","PatBot","Machete Squad","Dad Bodgers","Seanhawks","Pete'sburgh Steelers","SDC Niners","Nifty Knights Ni!","Eagles","Royals"]
+
+# Team names change between seasons; map to one franchise id so histories link.
+# confidence: "confirmed" or "assumed" -- review `assumed` rows.
+[[franchise]]
+name = "PatBot"
+franchise = "Team Autopick"
+confidence = "confirmed"   # manager "Patrick" per Yahoo blowout recap
+[[franchise]]
+name = "Dad Bodgers"
+franchise = "Make Draye whilst the sunshine"
+confidence = "assumed"     # the only 2025 team name that disappears; verify with the league

@@ -53,3 +53,19 @@ def sync(current_season: int, full: bool = False) -> None:
         snap("ff_rankings_week", nfl.load_ff_rankings("week"))
     with contextlib.suppress(Exception):
         snap("ff_opportunity", nfl.load_ff_opportunity(seasons))
+    with contextlib.suppress(Exception):
+        # FTN play charting (2022+): play-action / motion / no-huddle / screen tendencies
+        snap("ftn_charting", nfl.load_ftn_charting([y for y in seasons if y >= 2022]))
+    with contextlib.suppress(Exception):
+        snap("ff_rankings_draft_history", _draft_rank_history(nfl))
+
+
+def _draft_rank_history(nfl) -> pl.DataFrame:
+    """Archived FantasyPros ECR snapshots taken in the pre-draft window (Aug 1 - Sep 15) of each
+    year, redraft pages only. Lets us reconstruct the *market price* of a player at draft time."""
+    r = nfl.load_ff_rankings("all").with_columns(pl.col("scrape_date").cast(pl.Date))
+    keep = ["redraft-op", "redraft-overall", "redraft-qb", "redraft-rb", "redraft-wr", "redraft-te", "redraft-k", "redraft-dst"]
+    return r.filter(
+        pl.col("page_type").is_in(keep)
+        & (pl.col("scrape_date").dt.month().is_between(7, 9))
+    ).select("scrape_date", "page_type", "player", "pos", "team", "ecr", "sd", "best", "worst")

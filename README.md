@@ -61,6 +61,7 @@ snapshots your league history.
 | `uv run playbook player NAME...` | Usage / luck / trend profile + marginal lineup gain |
 | `uv run playbook track` | Weekly snapshot of rosters, scoring, waiver wire, standings |
 | `uv run playbook trend` | Trend: scoring x form x scheme fit x schedule difficulty ([track-trend.md](docs/playbooks/track-trend.md)) |
+| `uv run playbook draft-review` | Draft prep: manager tendencies + who does their research ([draft-review.md](docs/playbooks/draft-review.md)) |
 | `uv run playbook weekly` | sync → track → trend → review → waivers |
 | `uv run playbook trades` | Ranked trade proposals with rest-of-season impact |
 | `uv run playbook standings` | Monte Carlo playoff odds + projected finish |
@@ -77,4 +78,6 @@ See [the implementation plan](docs/plan.md) for the full architecture. Key packa
 
 ## Agent & skills
 
-Project agent `league-analyst` (`.claude/agents/`) runs the weekly cycle in the background; skills `league-track`, `league-trend`, `league-waivers`, `league-weekly` (`.claude/skills/`) hold each procedure.
+Project agent `league-analyst` (`.claude/agents/`) runs the weekly cycle in the background; skills `league-draft-review`, `league-track`, `league-trend`, `league-waivers`, `league-weekly` (`.claude/skills/`) hold each procedure.
+
+The agent runs on a schedule as the `unsw-league-weekly` task: Wednesdays 08:00 Sydney (after Monday Night Football finishes on Tuesday Sydney time).

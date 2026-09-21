@@ -102,6 +102,20 @@ def opponent_softness(week: int) -> pl.DataFrame:
     return out.drop("opps")
 
 
+def availability() -> pl.DataFrame:
+    """Per player: share of available games not played (injury / scratch) + usage from nflverse."""
+    if not store.exists("derived/league", "player_weekly_advanced"):
+        return pl.DataFrame(schema={"player_id": pl.Utf8})
+    a = store.read("derived/league", "player_weekly_advanced").filter(pl.col("status") != "bye")
+    return a.group_by("player_id").agg(
+        (pl.col("status") != "played").mean().alias("miss_rate"),
+        pl.col("wopr").mean().alias("wopr_avg"),
+        pl.col("air_yards_share").mean().alias("air_share"),
+        pl.col("target_share").mean().alias("tgt_share_avg"),
+        pl.col("status").sort_by("week").last().alias("last_status"),
+    )
+
+
 def build(week: int) -> pl.DataFrame:
     pt = rv.player_table()
     pt = pt.filter(pl.col("position").is_in(_POS))
@@ -112,6 +126,7 @@ def build(week: int) -> pl.DataFrame:
         pt.join(team_tendencies(week), on="team", how="left")
         .join(_shares(), on="player_id", how="left")
         .join(opponent_softness(week), on=["team", "position"], how="left")
+        .join(availability(), on="player_id", how="left")
     )
     # ---- scheme: team lean toward the position + role change
     lean = (
@@ -124,12 +139,15 @@ def build(week: int) -> pl.DataFrame:
         ((share_now - share_prev).fill_null(0.0) * 10).alias("role_delta"),  # +1 per 10 pp share gain
     )
     t = t.with_columns((pl.col("team_lean") * 0.5 + pl.col("role_delta") * 0.5).alias("scheme_raw"))
+    if "miss_rate" not in t.columns:
+        t = t.with_columns(pl.lit(None, dtype=pl.Float64).alias("miss_rate"))
     # ---- form
     t = t.with_columns(
         ((pl.col("last2").fill_null(pl.col("forecast")) - pl.col("prior_ppg").fill_null(pl.col("forecast")))).alias("form_raw"),
         (-pl.col("finish_luck").fill_null(0.0)).alias("luck_adj"),
     ).with_columns(
-        (pl.col("form_raw") * 0.5 + pl.col("luck_adj") * 0.3 + pl.col("snap_trend").fill_null(0.0) / 10.0 * 0.2).alias("form_x")
+        (pl.col("form_raw") * 0.5 + pl.col("luck_adj") * 0.3 + pl.col("snap_trend").fill_null(0.0) / 10.0 * 0.2
+         - pl.col("miss_rate").fill_null(0.0) * 4.0).alias("form_x")  # each missed game costs form
     )
     t = t.filter(pl.col("forecast") >= 3.0).with_columns(
         _zpos("forecast", "z_scoring"), _zpos("form_x", "z_form"),
@@ -149,7 +167,7 @@ def build(week: int) -> pl.DataFrame:
         t = t.with_columns(pl.lit(None, dtype=pl.Float64).alias("trend_delta"), pl.lit(None, dtype=pl.Int64).alias("rank_delta"))
     t = t.with_columns(pl.lit(week).alias("week"), _drivers().alias("drivers"))
     keep = ["week", "name", "position", "team", "g", "forecast", "ppg", "xfp_pg", "finish_luck", "snap_trend",
-            "team_lean", "role_delta", "sched_soft", "next_opps", "z_scoring", "z_form", "z_scheme", "z_schedule",
+            "team_lean", "role_delta", "wopr_avg", "miss_rate", "last_status", "sched_soft", "next_opps", "z_scoring", "z_form", "z_scheme", "z_schedule",
             "trend_score", "pos_rank_trend", "trend_delta", "rank_delta", "drivers", "signal"]
     out = t.select(keep).sort("trend_score", descending=True)
     store.write(out, "derived/trend", f"week_{week}")

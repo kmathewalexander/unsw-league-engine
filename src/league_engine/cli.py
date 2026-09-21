@@ -435,6 +435,32 @@ def weekly(week: int = typer.Option(None), skip_sync: bool = typer.Option(False)
     waivers(week=wk, top=20)
 
 
+@app.command("draft-review")
+def draft_review():
+    """Draft prep review: manager tendencies + who appears to do their research (2025-26 drafts)."""
+    from .analysis import draft_review as dr
+
+    picks = dr.build_picks()
+    prof = dr.manager_profiles(picks)
+    r2 = lambda d: d.with_columns(pl.col(pl.Float64).round(2))  # noqa: E731
+    cols = ["franchise", "style", "consensus_gap", "deviation_edge", "hit_rate", "bust_rate", "surplus_vs_mkt",
+            "research_signal", "moves"]
+    report.print_df(r2(prof.select([c for c in cols if c in prof.columns])), "Who does their research (proxy)", 13)
+    tcols = ["franchise", "first_qb_rd", "qb_r1_3", "rb_r1_5", "wr_r1_5", "first_te_rd", "k_rd", "def_rd", "rookie_share"]
+    report.print_df(r2(prof.select(tcols)), "Drafting tendencies", 13)
+    t = dr.tendencies(picks)
+    report.print_df(r2(t["league_position_reach"]), "League habit vs market (pick - market rank; - = reached)", 20)
+    report.print_df(r2(t["where_value_was"]), "Where value was (2025, places vs pick slot)", 30)
+    report.save("draft-review", [
+        ("Research proxy", report.df_to_md(r2(prof.select([c for c in cols if c in prof.columns])), 13)),
+        ("Tendencies", report.df_to_md(r2(prof.select(tcols)), 13)),
+        ("League position habit", report.df_to_md(r2(t["league_position_reach"]), 20)),
+        ("Where value was", report.df_to_md(r2(t["where_value_was"]), 40)),
+        ("Position by round", report.df_to_md(t["pos_by_round"], 40)),
+        ("Homer stacks", report.df_to_md(t["homer_stacks"], 20)),
+    ])
+
+
 @app.command()
 def trades():
     """Ranked trade proposals with rest-of-season impact."""

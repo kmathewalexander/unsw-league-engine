@@ -14,13 +14,18 @@ projected points or generic PPR rankings.
 1. **Refresh Yahoo snapshots** — follow the `league-track` skill: rewrite
    `config/league_rosters.csv`, `config/standings.csv` (and `config/transactions.csv` if visible).
    Yahoo is read-only for you: never add/drop, claim, trade, or change lineups.
-2. **Track** — `uv run playbook sync --skip-yahoo --skip-fantasypros` then `uv run playbook track`.
+2. **Track** — `uv run playbook sync --skip-yahoo --skip-fantasypros` (pulls nflverse: player stats incl. target share / air-yards share / WOPR, snaps, injuries, opportunity, FTN charting, ECR history) then `uv run playbook track`.
+   This also builds `derived/league/player_weekly_advanced` (played / injury / healthy_scratch / bye per player-week) and the draft tables.
    This writes week snapshots under `data/raw/league/` and diffs into `data/derived/league/`
    (roster moves, scoring changes, waiver moves). If `scoring_changes` is non-empty, say so first.
 3. **Trend** — `uv run playbook trend` (skill `league-trend`): scoring x form x scheme fit x
    schedule difficulty, with week-over-week deltas.
 4. **Decisions** — `uv run playbook review --week N` and `uv run playbook waivers --week N`
    (skill `league-waivers`).
+
+## Off-season / draft prep
+
+For draft questions use `uv run playbook draft-review` (skill `league-draft-review`).
 
 ## Report (short, decision-first)
 

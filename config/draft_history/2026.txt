@@ -1,0 +1,192 @@
+Jahmyr Gibbs|RB
+Bijan Robinson|RB
+Josh Allen|QB
+Jonathan Taylor|RB
+Christian McCaffrey|RB
+Ja'Marr Chase|WR
+Lamar Jackson|QB
+Drake Maye|QB
+Jaxon Smith-Njigba|WR
+Puka Nacua|WR
+Justin Herbert|QB
+Joe Burrow|QB
+James Cook III|RB
+Trevor Lawrence|QB
+Jayden Daniels|QB
+Patrick Mahomes|QB
+Jalen Hurts|QB
+Saquon Barkley|RB
+Derrick Henry|RB
+Caleb Williams|QB
+Amon-Ra St. Brown|WR
+Dak Prescott|QB
+Justin Jefferson|WR
+CeeDee Lamb|WR
+Kenneth Walker III|RB
+Omarion Hampton|RB
+Chase Brown|RB
+Brock Bowers|TE
+Brock Purdy|QB
+Bo Nix|QB
+Ashton Jeanty|RB
+De'Von Achane|RB
+Breece Hall|RB
+Matthew Stafford|QB
+Drake London|WR
+Nico Collins|WR
+Jaxson Dart|QB
+George Pickens|WR
+Kyren Williams|RB
+Jordan Love|QB
+Trey McBride|TE
+A.J. Brown|WR
+Chris Olave|WR
+Garrett Wilson|WR
+Jared Goff|QB
+Malik Nabers|WR
+Tyler Shough|QB
+DeVonta Smith|WR
+Tee Higgins|WR
+Kyler Murray|QB
+Jeremiyah Love|RB
+Rashee Rice|WR
+Zay Flowers|WR
+Javonte Williams|RB
+Baker Mayfield|QB
+Tetairoa McMillan|WR
+Quinshon Judkins|RB
+Travis Etienne Jr.|RB
+Jaylen Waddle|WR
+Ladd McConkey|WR
+D'Andre Swift|RB
+Colston Loveland|TE
+Josh Jacobs|RB
+Emeka Egbuka|WR
+Cam Skattebo|RB
+Terry McLaurin|WR
+Malik Willis|QB
+Bucky Irving|RB
+C.J. Stroud|QB
+Davante Adams|WR
+Cam Ward|QB
+Tyler Warren|TE
+David Montgomery|RB
+Bhayshul Tuten|RB
+Jameson Williams|WR
+Jadarian Price|RB
+Marvin Harrison Jr.|WR
+Rhamondre Stevenson|RB
+Tucker Kraft|TE
+Jaylen Warren|RB
+Jonathon Brooks|RB
+Luther Burden III|WR
+TreVeyon Henderson|RB
+DJ Moore|WR
+Sam LaPorta|TE
+Tony Pollard|RB
+Harold Fannin Jr.|TE
+George Kittle|TE
+Rome Odunze|WR
+Christian Watson|WR
+Rico Dowdle|RB
+DK Metcalf|WR
+Mike Evans|WR
+Blake Corum|RB
+Brian Thomas Jr.|WR
+Sam Darnold|QB
+Parker Washington|WR
+Carnell Tate|WR
+Jacory Croskey-Merritt|RB
+Chuba Hubbard|RB
+Kyle Pitts Sr.|TE
+De'Zhaun Stribling|WR
+J.K. Dobbins|RB
+Courtland Sutton|WR
+RJ Harvey|RB
+Bryce Young|QB
+Chris Godwin Jr.|WR
+Jordan Mason|RB
+Mike Washington Jr.|RB
+Michael Wilson|WR
+Dallas Goedert|TE
+Alec Pierce|WR
+Jordan Addison|WR
+Daniel Jones|QB
+KC Concepcion Jr.|WR
+Kenny Gainwell|RB
+Dalton Kincaid|TE
+Isaiah Likely|TE
+Travis Kelce|TE
+Stefon Diggs|WR
+Josh Downs|WR
+Kyle Monangai|RB
+Fernando Mendoza|QB
+Rams|DEF
+Quentin Johnston|WR
+Seahawks|DEF
+Jayden Reed|WR
+Texans|DEF
+Aaron Jones Sr.|RB
+Michael Pittman Jr.|WR
+Matthew Golden|WR
+Rashid Shaheed|WR
+Broncos|DEF
+Rachaad White|RB
+Makai Lemon|WR
+Wan'Dale Robinson|WR
+Jacoby Brissett|QB
+Brandon Aubrey|K
+AJ Barner|TE
+Michael Penix Jr.|QB
+Aaron Rodgers|QB
+Chris Rodriguez Jr.|RB
+Ka'imi Fairbairn|K
+Keaton Mitchell|RB
+Mark Andrews|TE
+Eagles|DEF
+Xavier Worthy|WR
+Jason Myers|K
+Tyjae Spears|RB
+Kenyon Sadiq|TE
+Jalen Coker|WR
+Tyler Allgeier|RB
+Alvin Kamara|RB
+Romeo Doubs|WR
+Juwan Johnson|TE
+Cameron Dicker|K
+Woody Marks|RB
+Geno Smith|QB
+Tank Bigsby|RB
+Deebo Samuel Sr.|WR
+Jakobi Meyers|WR
+Oronde Gadsden|TE
+James Conner|RB
+Zach Charbonnet|RB
+Khalil Shakir|WR
+Jonah Coleman|RB
+Keenan Allen|WR
+Tua Tagovailoa|QB
+Vikings|DEF
+Chig Okonkwo|TE
+Patriots|DEF
+Brian Robinson|RB
+Ravens|DEF
+Deshaun Watson|QB
+Lions|DEF
+MarShawn Lloyd|RB
+Chargers|DEF
+Jaguars|DEF
+Cam Little|K
+Hunter Henry|TE
+Mac Jones|QB
+Steelers|DEF
+Tyler Loop|K
+Jake Bates|K
+Eddy Pineiro|K
+CJ Daniels|WR
+Will Reichard|K
+Harrison Mevis|K
+Jake Ferguson|TE
+Cairo Santos|K
+Isiah Pacheco|RB
+Evan McPherson|K
