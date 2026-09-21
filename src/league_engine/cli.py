@@ -391,6 +391,51 @@ def player(names: list[str] = typer.Argument(...)):
 
 
 @app.command()
+def track(week: int = typer.Option(None, help="Week label for the snapshot (default: upcoming NFL week)")):
+    """Snapshot rosters, scoring rules, waiver wire and standings for the week (data/raw/league)."""
+    from . import tracking
+
+    res = tracking.track_all(week)
+    console.print(res)
+
+
+@app.command()
+def trend(week: int = typer.Option(None), top: int = typer.Option(15)):
+    """Weekly trend analysis: scoring x form x scheme fit x schedule difficulty."""
+    from . import tracking
+    from .analysis import trend as tr
+
+    week = week or tracking.current_week()
+    t = tr.build(week)
+    v = tr.league_view(week, t)
+    cols = ["name", "position", "team", "forecast", "z_scoring", "z_form", "z_scheme", "z_schedule",
+            "trend_score", "trend_delta", "next_opps", "drivers", "signal"]
+    fmt = lambda d: d.select([c for c in cols if c in d.columns]).with_columns(pl.col(pl.Float64).round(2))  # noqa: E731
+    report.print_df(fmt(v["mine"]), f"My roster trend — week {week}", max_rows=20)
+    report.print_df(fmt(v["free_agents"]), "Free-agent trend risers", max_rows=top)
+    report.print_df(v["teams"].with_columns(pl.col(pl.Float64).round(2)), "Team trend (top-8 by trend)", max_rows=13)
+    report.save(f"trend-week{week}", [
+        ("My roster", report.df_to_md(fmt(v["mine"]), 30)),
+        ("Free agents", report.df_to_md(fmt(v["free_agents"]), 30)),
+        ("Teams", report.df_to_md(v["teams"].with_columns(pl.col(pl.Float64).round(2)), 13)),
+    ])
+
+
+@app.command()
+def weekly(week: int = typer.Option(None), skip_sync: bool = typer.Option(False)):
+    """Full weekly cycle: sync -> track -> trend -> review -> waivers."""
+    from . import tracking
+
+    if not skip_sync:
+        sync(full=False, skip_yahoo=True, skip_fantasypros=True, week="draft")
+    wk = week or tracking.current_week()
+    track(week=wk)
+    trend(week=wk, top=15)
+    review(week=wk)
+    waivers(week=wk, top=20)
+
+
+@app.command()
 def trades():
     """Ranked trade proposals with rest-of-season impact."""
     console.print("[yellow]trades: requires league rosters snapshot (Yahoo roster endpoints).[/yellow]")

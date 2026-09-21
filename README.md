@@ -59,6 +59,9 @@ snapshots your league history.
 | `uv run playbook waivers --week N` | Ranked waiver targets, drops, FAAB bids |
 | `uv run playbook review --week N` | Power rankings, all-play luck, playoff odds, optimal lineup ([review.md](docs/playbooks/review.md)) |
 | `uv run playbook player NAME...` | Usage / luck / trend profile + marginal lineup gain |
+| `uv run playbook track` | Weekly snapshot of rosters, scoring, waiver wire, standings |
+| `uv run playbook trend` | Trend: scoring x form x scheme fit x schedule difficulty ([track-trend.md](docs/playbooks/track-trend.md)) |
+| `uv run playbook weekly` | sync → track → trend → review → waivers |
 | `uv run playbook trades` | Ranked trade proposals with rest-of-season impact |
 | `uv run playbook standings` | Monte Carlo playoff odds + projected finish |
 | `uv run playbook brief --week N` | Combined weekly report |
@@ -71,3 +74,7 @@ procedure behind each is documented in [`docs/playbooks/`](docs/playbooks/).
 See [the implementation plan](docs/plan.md) for the full architecture. Key packages live under
 `src/league_engine/`: `ingest/` (data sources), `scoring.py` (league scoring engine),
 `projections.py` (projection model), `analysis/` (one module per playbook), `cli.py` (playbook CLI).
+
+## Agent & skills
+
+Project agent `league-analyst` (`.claude/agents/`) runs the weekly cycle in the background; skills `league-track`, `league-trend`, `league-waivers`, `league-weekly` (`.claude/skills/`) hold each procedure.
