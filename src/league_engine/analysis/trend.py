@@ -116,6 +116,36 @@ def availability() -> pl.DataFrame:
     )
 
 
+def team_qb() -> pl.DataFrame:
+    """Primary QB per team (most 2026 attempts, else 2025) with efficiency z-scores.
+
+    qb_z = 0.6 z(EPA/attempt) + 0.4 z(CPOE) across the 32 offences. Feeds scheme fit for WR/TE:
+    the same target share is worth more with a competent passer.
+    """
+    ps = store.read("raw/nflverse", "player_stats").filter((pl.col("season_type") == "REG") & (pl.col("attempts") > 0))
+    cur = int(ps["season"].max())
+
+    def agg(season: int) -> pl.DataFrame:
+        a = ps.filter(pl.col("season") == season).group_by(["team", "player_display_name"]).agg(
+            pl.col("attempts").sum().alias("att"), pl.col("passing_epa").sum().alias("epa"),
+            pl.col("passing_cpoe").mean().alias("cpoe"))
+        return a.sort("att", descending=True).group_by("team", maintain_order=True).first().with_columns(
+            (pl.col("epa") / pl.col("att")).alias("epa_att"))
+
+    now, prev = agg(cur), agg(cur - 1)
+    q = prev.join(now, on="team", how="full", coalesce=True, suffix="_n")
+    use_now = pl.col("att_n").fill_null(0) >= 40
+    q = q.select(
+        pl.col("team"),
+        pl.when(use_now).then(pl.col("player_display_name_n")).otherwise(pl.col("player_display_name")).alias("qb"),
+        pl.when(use_now).then(pl.col("epa_att_n")).otherwise(pl.col("epa_att")).alias("epa_att"),
+        pl.when(use_now).then(pl.col("cpoe_n")).otherwise(pl.col("cpoe")).alias("cpoe"),
+        pl.col("player_display_name_n").alias("qb_now"),
+    )
+    z = lambda c: (pl.col(c) - pl.col(c).mean()) / pl.col(c).std()  # noqa: E731
+    return q.with_columns((0.6 * z("epa_att").fill_null(0.0) + 0.4 * z("cpoe").fill_null(0.0)).alias("qb_z"))
+
+
 def build(week: int) -> pl.DataFrame:
     pt = rv.player_table()
     pt = pt.filter(pl.col("position").is_in(_POS))
@@ -127,6 +157,7 @@ def build(week: int) -> pl.DataFrame:
         .join(_shares(), on="player_id", how="left")
         .join(opponent_softness(week), on=["team", "position"], how="left")
         .join(availability(), on="player_id", how="left")
+        .join(team_qb().select("team", "qb", "qb_z"), on="team", how="left")
     )
     # ---- scheme: team lean toward the position + role change
     lean = (
@@ -138,7 +169,8 @@ def build(week: int) -> pl.DataFrame:
         (lean * 10).alias("team_lean"),                                    # +1 per 10 pp of lean
         ((share_now - share_prev).fill_null(0.0) * 10).alias("role_delta"),  # +1 per 10 pp share gain
     )
-    t = t.with_columns((pl.col("team_lean") * 0.5 + pl.col("role_delta") * 0.5).alias("scheme_raw"))
+    qb_part = pl.when(pl.col("position").is_in(["WR", "TE"])).then(pl.col("qb_z").fill_null(0.0)).otherwise(0.0)
+    t = t.with_columns((pl.col("team_lean") * 0.4 + pl.col("role_delta") * 0.4 + qb_part * 0.2).alias("scheme_raw"))
     if "miss_rate" not in t.columns:
         t = t.with_columns(pl.lit(None, dtype=pl.Float64).alias("miss_rate"))
     # ---- form
@@ -167,7 +199,7 @@ def build(week: int) -> pl.DataFrame:
         t = t.with_columns(pl.lit(None, dtype=pl.Float64).alias("trend_delta"), pl.lit(None, dtype=pl.Int64).alias("rank_delta"))
     t = t.with_columns(pl.lit(week).alias("week"), _drivers().alias("drivers"))
     keep = ["week", "name", "position", "team", "g", "forecast", "ppg", "xfp_pg", "finish_luck", "snap_trend",
-            "team_lean", "role_delta", "wopr_avg", "miss_rate", "last_status", "sched_soft", "next_opps", "z_scoring", "z_form", "z_scheme", "z_schedule",
+            "qb", "qb_z", "team_lean", "role_delta", "wopr_avg", "miss_rate", "last_status", "sched_soft", "next_opps", "z_scoring", "z_form", "z_scheme", "z_schedule",
             "trend_score", "pos_rank_trend", "trend_delta", "rank_delta", "drivers", "signal"]
     out = t.select(keep).sort("trend_score", descending=True)
     store.write(out, "derived/trend", f"week_{week}")

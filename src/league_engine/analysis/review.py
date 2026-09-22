@@ -146,6 +146,8 @@ def player_table(week: int | None = None) -> pl.DataFrame:
         0.6 * pl.col("xfp_pg") + 0.4 * pl.col("ppg")
     ).otherwise(pl.col("ppg"))
     k = pl.col("position").replace_strict(_K, default=_K_DEFAULT, return_dtype=pl.Float64)
+    # rookies have no NFL baseline (the "prior" is only a draft-rank guess), so trust 2026 evidence sooner
+    k = pl.when(pl.col("g25").is_null()).then(k * 0.5).otherwise(k)
     n = pl.col("g").cast(pl.Float64)
     t = t.with_columns(prior.alias("prior_ppg"), evidence.alias("evidence_ppg"), k.alias("_k_pg"))
     t = t.with_columns(

@@ -32,6 +32,11 @@ uv run playbook waivers --week 3       # free agents ranked by marginal optimal-
 8. **Waivers** — for each free agent, re-solve *my* optimal lineup with them added; the
    difference is `lineup_gain` (0 = would not start). `replaces` names who they displace.
 
+## Changes after review
+
+- Rookies (no 2025 games) use half the prior weight `k`: their prior is only a draft-rank guess.
+- Trend scheme fit now includes the team's primary QB (EPA/attempt + CPOE) for WR/TE.
+
 ## Known gaps
 
 - DEF has no scoring model (flat 7.0 placeholder); K uses league PPG.
