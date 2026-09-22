@@ -9,7 +9,7 @@ uv run playbook draft-review
 ## Data
 - `config/draft_history/2025.txt`, `2026.txt` — Yahoo draft results (`Player|POS`, pick order).
 - `config/draft_history/orders.toml` — round-1 order per season (snake) + franchise renames
-  (PatBot→Team Autopick confirmed; Dad Bodgers→Make Draye *assumed*).
+  (PatBot→Team Autopick and Dad Bodgers→Make Draye both confirmed by Yahoo's `/lastseason` page).
 - nflverse archive `raw/nflverse/ff_rankings_draft_history` (FantasyPros ECR snapshots, Jul-Sep).
   Market price = latest superflex `redraft-op` snapshot on/before draft day (2026-08-29; 2025 draft
   day is assumed to be 2025-09-03 — edit `_CUTOFF` in `analysis/draft_review.py`).

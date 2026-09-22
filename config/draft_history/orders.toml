@@ -8,8 +8,8 @@
 [[franchise]]
 name = "PatBot"
 franchise = "Team Autopick"
-confidence = "confirmed"   # manager "Patrick" per Yahoo blowout recap
+confidence = "confirmed"   # Yahoo /lastseason: "PatBot (now named Team Autopick)"
 [[franchise]]
 name = "Dad Bodgers"
 franchise = "Make Draye whilst the sunshine"
-confidence = "assumed"     # the only 2025 team name that disappears; verify with the league
+confidence = "confirmed"   # Yahoo /lastseason: "Dad Bodgers (now named Make Draye whilst the sunshine)"
