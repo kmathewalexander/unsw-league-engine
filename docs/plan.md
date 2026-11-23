@@ -58,8 +58,8 @@ UNSW League/
     report.py              # Markdown/rich report builders
     cli.py                 # typer app: the playbooks
   docs/playbooks/          # one .md per playbook: inputs, procedure, thresholds, how to read output
-  data/                    # gitignored Parquet cache (raw + derived)
-  reports/                 # gitignored generated Markdown reports
+  data/                    # Parquet store, tracked in git (except the re-fetchable nflverse cache)
+  reports/                 # generated Markdown reports, tracked in git
   private/                 # gitignored OAuth token
   tests/
 ```

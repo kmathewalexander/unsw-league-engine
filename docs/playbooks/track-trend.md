@@ -20,4 +20,7 @@ data/derived/trend/week_<N>.parquet                                       # tren
 
 Yahoo's API is gated, so `config/league_rosters.csv`, `config/standings.csv` (and optional
 `transactions.csv`, `schedule.csv`) are refreshed from the Yahoo pages by the agent/skill and
-then snapshotted. Those files are gitignored (`.example` files show the format).
+then snapshotted. Those files, the week snapshots above and `reports/` are committed each week
+by the scheduled run, so the history lives in git. Only the re-fetchable nflverse cache
+(`data/raw/nflverse/`) and `data/derived/league_points.parquet` stay gitignored; `playbook sync`
+rebuilds them.

@@ -48,6 +48,12 @@ uv run playbook sync            # add --skip-yahoo until API access is approved
 derived tables under `data/`. With Yahoo access it also does a one-time browser OAuth consent and
 snapshots your league history.
 
+The league history (weekly Yahoo snapshots under `data/raw/league/`, derived tables, `reports/` and
+the `config/*.csv` inputs) is committed to git, so a fresh clone carries the full season. Only the
+nflverse cache (`data/raw/nflverse/`) and `data/derived/league_points.parquet` are gitignored:
+they're large, rewritten on every sync, and rebuilt by `playbook sync`. Secrets (`.env`, `private/`)
+stay ignored.
+
 ## Playbooks
 
 | Command | Purpose |
