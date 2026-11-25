@@ -1,31 +1,31 @@
 {
   "derived/crosswalk": {
     "rows": 5366,
-    "synced_at": "2026-11-11T02:42:00.974246+00:00"
+    "synced_at": "2026-11-25T02:44:48.870179+00:00"
   },
   "derived/league/draft_manager_profiles": {
     "rows": 12,
     "synced_at": "2026-09-22T00:06:01.407373+00:00"
   },
   "derived/league/player_weekly_advanced": {
-    "rows": 6552,
-    "synced_at": "2026-11-11T02:42:06.749939+00:00"
+    "rows": 8151,
+    "synced_at": "2026-11-25T02:44:53.447899+00:00"
   },
   "derived/league/roster_moves": {
     "rows": 160,
     "synced_at": "2026-11-06T05:33:36.488062+00:00"
   },
   "derived/league/waiver_moves": {
-    "rows": 274,
-    "synced_at": "2026-11-11T02:42:06.538986+00:00"
+    "rows": 306,
+    "synced_at": "2026-11-25T02:44:53.263790+00:00"
   },
   "derived/league_points": {
-    "rows": 191719,
-    "synced_at": "2026-11-11T02:42:01.030966+00:00"
+    "rows": 193594,
+    "synced_at": "2026-11-25T02:44:48.921175+00:00"
   },
   "derived/proj_season": {
-    "rows": 510,
-    "synced_at": "2026-11-11T02:42:01.100936+00:00"
+    "rows": 480,
+    "synced_at": "2026-11-25T02:44:48.996465+00:00"
   },
   "derived/proj_week_1": {
     "rows": 1118,
@@ -43,13 +43,21 @@
     "rows": 1598,
     "synced_at": "2026-10-15T22:46:31.695693+00:00"
   },
+  "derived/proj_week_9": {
+    "rows": 1778,
+    "synced_at": "2026-11-23T23:39:49.470328+00:00"
+  },
   "derived/research": {
-    "rows": 478,
-    "synced_at": "2026-11-11T02:42:01.164965+00:00"
+    "rows": 448,
+    "synced_at": "2026-11-25T02:44:49.060202+00:00"
   },
   "derived/trend/week_10": {
     "rows": 315,
     "synced_at": "2026-11-11T02:42:13.348210+00:00"
+  },
+  "derived/trend/week_12": {
+    "rows": 331,
+    "synced_at": "2026-11-25T02:44:58.927346+00:00"
   },
   "derived/trend/week_3": {
     "rows": 278,
@@ -76,8 +84,8 @@
     "synced_at": "2026-11-06T05:33:43.353069+00:00"
   },
   "derived/value_board": {
-    "rows": 478,
-    "synced_at": "2026-11-11T02:42:01.120364+00:00"
+    "rows": 448,
+    "synced_at": "2026-11-25T02:44:49.013067+00:00"
   },
   "raw/fantasypros/ecr_draft": {
     "rows": 559,
@@ -109,15 +117,19 @@
   },
   "raw/league/draft/season_2025": {
     "rows": 192,
-    "synced_at": "2026-11-11T02:42:06.805946+00:00"
+    "synced_at": "2026-11-25T02:44:53.498976+00:00"
   },
   "raw/league/draft/season_2026": {
     "rows": 192,
-    "synced_at": "2026-11-11T02:42:06.811019+00:00"
+    "synced_at": "2026-11-25T02:44:53.506045+00:00"
   },
   "raw/league/rosters/week_10": {
     "rows": 213,
     "synced_at": "2026-11-11T02:42:06.400786+00:00"
+  },
+  "raw/league/rosters/week_12": {
+    "rows": 213,
+    "synced_at": "2026-11-25T02:44:53.126079+00:00"
   },
   "raw/league/rosters/week_3": {
     "rows": 203,
@@ -147,6 +159,10 @@
     "rows": 31,
     "synced_at": "2026-11-11T02:42:06.413767+00:00"
   },
+  "raw/league/scoring/week_12": {
+    "rows": 31,
+    "synced_at": "2026-11-25T02:44:53.145517+00:00"
+  },
   "raw/league/scoring/week_3": {
     "rows": 31,
     "synced_at": "2026-09-23T08:47:02.333042+00:00"
@@ -174,6 +190,10 @@
   "raw/league/standings/week_10": {
     "rows": 12,
     "synced_at": "2026-11-11T02:42:06.555574+00:00"
+  },
+  "raw/league/standings/week_12": {
+    "rows": 12,
+    "synced_at": "2026-11-25T02:44:53.273902+00:00"
   },
   "raw/league/standings/week_3": {
     "rows": 12,
@@ -203,6 +223,10 @@
     "rows": 37,
     "synced_at": "2026-11-11T02:42:06.548180+00:00"
   },
+  "raw/league/transactions/week_12": {
+    "rows": 37,
+    "synced_at": "2026-11-25T02:44:53.269535+00:00"
+  },
   "raw/league/transactions/week_3": {
     "rows": 5,
     "synced_at": "2026-09-23T08:47:02.516944+00:00"
@@ -231,6 +255,10 @@
     "rows": 197,
     "synced_at": "2026-11-11T02:42:06.529112+00:00"
   },
+  "raw/league/waivers/week_12": {
+    "rows": 197,
+    "synced_at": "2026-11-25T02:44:53.256950+00:00"
+  },
   "raw/league/waivers/week_3": {
     "rows": 197,
     "synced_at": "2026-09-23T08:47:02.509020+00:00"
@@ -256,51 +284,51 @@
     "synced_at": "2026-11-06T05:33:36.607047+00:00"
   },
   "raw/nflverse/depth_charts": {
-    "rows": 1659559,
-    "synced_at": "2026-11-11T02:41:30.297043+00:00"
+    "rows": 1722864,
+    "synced_at": "2026-11-25T02:44:16.193342+00:00"
   },
   "raw/nflverse/ff_opportunity": {
-    "rows": 61166,
-    "synced_at": "2026-11-11T02:41:53.489643+00:00"
+    "rows": 61744,
+    "synced_at": "2026-11-25T02:44:35.724816+00:00"
   },
   "raw/nflverse/ff_playerids": {
-    "rows": 12538,
-    "synced_at": "2026-11-11T02:41:40.574634+00:00"
+    "rows": 12542,
+    "synced_at": "2026-11-25T02:44:25.049602+00:00"
   },
   "raw/nflverse/ff_rankings": {
-    "rows": 5411,
-    "synced_at": "2026-11-11T02:41:43.626674+00:00"
+    "rows": 5458,
+    "synced_at": "2026-11-25T02:44:26.794408+00:00"
   },
   "raw/nflverse/ff_rankings_draft_history": {
     "rows": 130528,
-    "synced_at": "2026-11-11T02:42:00.952809+00:00"
+    "synced_at": "2026-11-25T02:44:48.850596+00:00"
   },
   "raw/nflverse/ff_rankings_week": {
-    "rows": 682,
-    "synced_at": "2026-11-11T02:41:44.309710+00:00"
+    "rows": 640,
+    "synced_at": "2026-11-25T02:44:27.397854+00:00"
   },
   "raw/nflverse/ftn_charting": {
-    "rows": 208171,
-    "synced_at": "2026-11-11T02:41:56.644757+00:00"
+    "rows": 212685,
+    "synced_at": "2026-11-25T02:44:38.263966+00:00"
   },
   "raw/nflverse/injuries": {
-    "rows": 58377,
-    "synced_at": "2026-11-11T02:41:37.423966+00:00"
+    "rows": 59037,
+    "synced_at": "2026-11-25T02:44:20.268384+00:00"
   },
   "raw/nflverse/player_stats": {
-    "rows": 191719,
-    "synced_at": "2026-11-11T02:41:12.328707+00:00"
+    "rows": 193594,
+    "synced_at": "2026-11-25T02:44:05.552168+00:00"
   },
   "raw/nflverse/players": {
-    "rows": 24867,
-    "synced_at": "2026-11-11T02:41:38.644813+00:00"
+    "rows": 24872,
+    "synced_at": "2026-11-25T02:44:21.336654+00:00"
   },
   "raw/nflverse/schedules": {
     "rows": 3033,
-    "synced_at": "2026-11-11T02:41:12.975821+00:00"
+    "synced_at": "2026-11-25T02:44:06.163924+00:00"
   },
   "raw/nflverse/snap_counts": {
-    "rows": 265800,
-    "synced_at": "2026-11-11T02:41:20.933078+00:00"
+    "rows": 268324,
+    "synced_at": "2026-11-25T02:44:10.156998+00:00"
   }
 }
